@@ -15,7 +15,7 @@ Specific Heat ratio(burned)=1.21
 
 Fuel : CH4 (Methane)
 
-Fuel mass: stochiometric up to 100 atm. of max.combustor pressure
+Fuel mass: stoichiometric up to 100 atm. of max.combustor pressure
 
 
 # Solve these Problems
