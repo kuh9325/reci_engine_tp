@@ -30,8 +30,6 @@ Qin = 55625; %[kJ/kg]
 dQ = Qin*(15/40)*(((CA-as)/40).^2); % incoming heat per theta
 shru = 1.31; %specific heat ratio (unburned)
 shrb = 1.21; %specific heat ratio (burned)
-yb = 1/(((shru/shrb)*((1/xb)+1))); %volume fraction
-
 %% calculating data section by section
 
 for i=1:length(CA)-1
