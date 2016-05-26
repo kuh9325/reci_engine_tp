@@ -14,9 +14,6 @@ T1 = 25+273; %initial temp (K)
 P1 = 101.325; %initial pressure (kPa)
 s = a*(cosd(CA))+sqrt(l.^2-((a.*sind(CA)).^2)); %piston displacement
 V = Vc + ((pi*Bo^2)/4)*(l+a-s); %volume displacement
-k = 1.35; %isentropic coefficient
-C = P1*((Vd+Vc)^k); %isentropic constant for volumetric calcuration
-P = C*(V.^-k); %Pressure
 % piston velocity %
 pv = a*w*sind(CA)-w*a.^2*sind(CA).*cosd(CA)/sqrt(l.^2-a.^2*(sind(CA)).^2);
 pa = - a*w^2*cosd(CA) - (a^2*w^2*cosd(2*CA))/l; %piston acceleration
@@ -34,8 +31,8 @@ yb = 1/(((shru/shrb)*((1/xb)+1))); %volume fraction
 
 %% calculating data section by section
 
-for i=1:length(CA)-1
-   dP = -k
+for i=1:(180-as)
+   Tu = T1*( 
 end
 
 %% plotting
