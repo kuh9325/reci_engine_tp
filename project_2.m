@@ -40,6 +40,7 @@ for i=1:length(CA)
     dQ(i) = 0;
     else
     xb(i) = 1-exp(-5*((CA(i)-as)/40).^3);
+    % diff of heat by radian angle
     dQ(i) = Qin*((15/40/(pi/180))*(1-xb(i))*((CA(i)-as)/40).^2);
     end
 end
@@ -47,14 +48,15 @@ end
 % dQ = Qin*(15/40)*(1-xb)*(((CA-as)/40).^2);
 
 % diff of Volume
-
+dV = zeros(length(CA),1);
 for i=1:length(CA)
 dV(i) = (Vd/2)*sind(CA(i))*(1+(cosd(CA(i))*((((2*l)/s(i))^2)-(sind(CA(i)))^2)^-0.5));
 end
 
 % diff of Pressure
 
-
+dP = zeros(length(CA)-1,1);
+P = zeros(length(CA)-1,1);
 P(1) = P1;
 for i=1:length(CA)-1
     dP(i) = (-k*P(i)/V(i))*dV(i)+((k-1)/V(i))*dQ(i);
