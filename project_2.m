@@ -25,37 +25,46 @@ pm = 0.1; % piston mass (kg)
 IF = -pm*pa; % inertia force (N)
 Tq = IF.*sind(CA)*a; % torque (Nm)
 as = 0; % or -20
-Qin = 55625; % [kJ/kg]
-dQ = Qin*(15/40)*(((CA-as)/40).^2); % incoming heat per theta
+Qin = 2000;%55625; % [kJ/kg]
 shru = 1.31; % specific heat ratio (unburned)
 shrb = 1.21; % specific heat ratio (burned)
+
 %% calculating data section by section
 
 % burn fraction; efficiency factor(a)=5, form factor(n)=3, interval = 40
 xb = zeros(length(CA),1);
+dQ = zeros(length(CA),1);
 for i=1:length(CA)
     if CA(i) <= as
-        xb(i) = 0;
+    xb(i) = 0;
+    dQ(i) = 0;
     else
     xb(i) = 1-exp(-5*((CA(i)-as)/40).^3);
+    dQ(i) = Qin*((15/40/(pi/180))*(1-xb(i))*((CA(i)-as)/40).^2);
     end
 end
 
-dP = zeros(length(CA),1);
-P = zeros(length(CA),1);
+% dQ = Qin*(15/40)*(1-xb)*(((CA-as)/40).^2);
+
+% diff of Volume
+
+for i=1:length(CA)
+dV(i) = (Vd/2)*sind(CA(i))*(1+(cosd(CA(i))*((((2*l)/s(i))^2)-(sind(CA(i)))^2)^-0.5));
+end
+
+% diff of Pressure
+
+
+P(1) = P1;
 for i=1:length(CA)-1
-    if i==1
-    dP(i) = 0;
-    P(i) = Pi(i);
-    else
-    dP(i) = -k*Pi(i)/V(i)*(V(i)-V(i-1))+(k-1)/V(i)*dQ(i);
-    P(i) = P(i-1) + dP(i); % pressure that concerned burning
-    end
+    dP(i) = (-k*P(i)/V(i))*dV(i)+((k-1)/V(i))*dQ(i);
+    P(i+1) = P(i) + dP(i)*pi/180; % pressure that concerned burning
 end
 
 for i=1:length(CA)-1
    
 end
+
 %% plotting
 
 % subplot(3,2,1)
@@ -63,7 +72,7 @@ end
 % xlabel('Crank Angle (¡Æ)')
 % ylabel('Temperature (K)')
 % subplot(3,2,2)
-plot(CA, xb)
+plot(CA, P)
 xlabel('Crank Angle (¡Æ)')
 ylabel('Pressure (kPa)')
 % subplot(3,2,3)
