@@ -25,10 +25,9 @@ pm = 0.1; % piston mass (kg)
 IF = -pm*pa; % inertia force (N)
 Tq = IF.*sind(CA)*a; % torque (Nm)
 as = 0; % or -20
-Qin = 3000; %55625; % [kJ/kg]
+Qin = 55625; % [kJ/kg]
 shru = 1.31; % specific heat ratio (unburned)
 shrb = 1.21; % specific heat ratio (burned)
-Te = 2394.5; % ignition temperature (K)
 
 %% calculating data section by section
 
@@ -68,13 +67,13 @@ end
 
 T = zeros(length(CA)-1,1);
 
-for i=1:length(CA)
-    if CA(i) < as % before combustion (as index is 181)
-    T(i) = T1*(V(1)/V(i))^(shru-1); 
+for i=1:length(CA)-1
+    if CA(i) < as % before combustion
+    T(i) = (V(1)/V(i))^(shru-1); 
     elseif CA(i) >= as && CA(i) <= as+40 % combustion
-    T(i) = Te*(xb(i)/(V(i)/V(181)))^(shrb-1); 
+    T(i) = T(as)*(xb(i)/(V(i)/V(as)))^(shru-1); 
     else % after combustion
-    T(i) = Te*(V(181)/V(i))^(shrb-1);
+    T(i) = (V(1)/V(i))^(shru-1);
     end
 end
 
@@ -88,8 +87,6 @@ end
 plot(CA, P)
 xlabel('Crank Angle (¡Æ)')
 ylabel('Pressure (kPa)')
-hold on
-plot(CA, T)
 % subplot(3,2,3)
 % plot(CA, pv)
 % xlabel('Crank Angle (¡Æ)')
