@@ -22,7 +22,7 @@ s = a*(cosd(CA))+sqrt(l.^2-((a.*sind(CA)).^2)); % piston displacement
 % volume displacement
 V = zeros(1,length(CA));
 for i=1:length(CA)
-    V(i) = Vc + (Vd/2)*((2*l/s(i))+1-cosd(CA(i))-sqrt(((2*l/s(i))^2)-(sind(CA(i))^2)));
+    V(i) = Vc + (Vd/2)*((2*l/s(i))+1-cosd(CA(i))-sqrt(((2*l/s(i))^.2)-(sind(CA(i)).^2)));
 end
 % k = 1.35; % isentropic coefficient (1.35)
 % C = P1*((Vd+Vc)^k); % isentropic constant for volumetric calculation
@@ -35,10 +35,9 @@ pm = 0.1; % piston mass (kg)
 IF = -pm*pa; % inertia force (N)
 Tq = IF.*sind(CA)*a; % torque (Nm)
 
-fm = 1.5e-2; % mass of fuel (0.02kg)
+fm = 2e-2; % mass of fuel (0.02kg)
 shru = 1.31; % specific heat ratio (unburned)
 shrb = 1.21; % specific heat ratio (burned)
-shrm = (shru+shrb)/2; % specific heat ratio (mean)
 Te = 2394.5; % ignition temperature (K)
 
 % calculate heat income (molecular mass of methane = 16)
@@ -68,7 +67,7 @@ for i=1:length(CA)
     else
         xb(i) = 1-exp(-5*((CA(i)-as)/40).^3);
         % diff of heat by radian angle
-        dQ(i) = Qin*((15/40)*(1-xb(i))*((CA(i)-as)/40)^2)*(180/pi);
+        dQ(i) = Qin*((15/40)*(1-xb(i))*((CA(i)-as)/40).^2)*(180/pi);
         Q = Q + dQ(i)*(pi/180);
     end
 end
@@ -81,33 +80,53 @@ for i=1:length(CA)
         ((((2*l)/s(i))^2)-(sind(CA(i)))^2)^-0.5));
 end
 
+Ve = (fm*0.5812*Te)/Pe;
+
 dP = zeros(1,length(CA));
 P = zeros(1,length(CA));
 P(1) = P1;
 for i=1:length(CA)
     if CA(i) < as % before combustion
         dP(i) = (-shru*(P(i)/V(i)))*dV(i)+((shru-1)/V(i))*dQ(i);
+        P(i) = P(1)*(V(1)/V(i)).^(shru);
     elseif CA(i) >= as && CA(i) <= as+40 % combustion
-        dP(i) = (-shrm*(P(i)/V(i)))*dV(i)+((shrm-1)/V(i))*dQ(i);
-    else % after combustion
-        dP(i) = (-shrb*(P(i)/V(i)))*dV(i)+((shrb-1)/V(i))*dQ(i);
-    end
-    if i ~= length(CA)
+        dP(i) = (-shrb*(P(i)/V(i)))*dV(i)+((shru-1)/V(i))*dQ(i);
         P(i+1) = P(i) + dP(i)*(pi/180); % pressure that concerned burning
+    else % after combustion
+        dP(i) = (-shrb*(P(i)/V(i)))*dV(i)+((shru-1)/V(i))*dQ(i);
+        P(i) = Pe*(Ve/V(i)).^(shrb);
     end
+%     if i ~= length(CA)
+%         P(i+1) = P(i) + dP(i)*(pi/180); % pressure that concerned burning
+%     end
 end
 
 % Temperature than concerns combustion
 
-T = zeros(1,length(CA));
+Tb = zeros(1,length(CA));
+Tu = zeros(1,length(CA));
+
+% for i=1:length(CA)
+%     if CA(i) < as % before combustion (zero index is 181)
+%     T(i) = T1*(V(1)/V(i))^(shru-1); 
+%     elseif CA(i) >= as && CA(i) <= as+40 % combustion
+%     T(i) = Te*(xb(i)/(V(i)/V(181-as)))^(shrb-1); 
+%     else % after combustion
+%     T(i) = Te*(V(181-as)/V(i))^(shrb-1);
+%     end
+% end
+
 
 for i=1:length(CA)
     if CA(i) < as % before combustion (zero index is 181)
-        T(i) = T1*(V(1)/V(i)).^(shru-1); % assuming that this process is isentropic
+        Tu(i) = T1*(V(1)/V(i)).^(shru-1); % assuming that this process is isentropic
+        Tb(i) = 0;
     elseif CA(i) >= as && CA(i) <= as+40 % combustion
-        T(i) = (P(i)*V(i))/(fm*0.287);
+        Tu(i) = (P(i)*V(i))/(fm*0.287);
+        Tb(i) = (P(i)*V(i))/(fm*0.287);
     else % after combustion
-        T(i) = (P(i)*V(i))/(fm*0.287);
+        Tu(i) = 0;
+        Tb(i) = Te*(Ve/V(i))^(shrb-1);
     end
 end
 
@@ -124,45 +143,16 @@ eE = W/Q; % engine efficiency
 
 %% plotting w/ print the efficiency
 
-% figure(1)
-% subplot(3,2,1)
-% plot(CA, T)
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Temperature (K)')
-% subplot(3,2,2)
-% plot(CA, P)
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Pressure (kPa)')
-% subplot(3,2,3)
-% plot(CA, pv)
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Piston Velocity (m/s)')
-% subplot(3,2,4)
-% plot(CA, pa)
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Piston Acceleration (m/s^2)')
-% subplot(3,2,5)
-% plot(CA, IF)
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Inertia Force (N)')
-% subplot(3,2,6)
-% plot(CA, Tq)
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Torque (N*m)')
-
-figure(2)
-
 % xlabel('Crank Angle (¡Æ)')
 % ylabel('Pressure (kPa)')
 % plot(CA, P)
 subplot(2,2,1)
-plot(CA, dQ)
+plot(CA, xb)
 subplot(2,2,2)
-plot(CA, dP)
-subplot(2,2,3)
-plot(CA, V)
-subplot(2,2,4)
+plot(CA, dQ)
+figure(2)
 plot(CA, P)
-% hold on
-% plot(CA, Tb)
+hold on
+plot(CA, Tu)
+plot(CA, Tb)
 fprintf('engine efficiency : %4.3f\n',eE);
