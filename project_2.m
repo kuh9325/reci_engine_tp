@@ -1,10 +1,8 @@
-% function eE = project_2(as)
-
+function project_2(as)
 %% as = 0 or -20 %%
 
 %% initial setting
 
-as = 0;
 CA = -180 : 180; % Crank Angle (deg)
 Bo = 83e-03; % Bore (m)
 St = 91.4e-03; % Stroke (m)
@@ -22,7 +20,8 @@ s = a*(cosd(CA))+sqrt(l.^2-((a.*sind(CA)).^2)); % piston displacement
 % volume displacement
 V = zeros(1,length(CA));
 for i=1:length(CA)
-    V(i) = Vc + (Vd/2)*((2*l/s(i))+1-cosd(CA(i))-sqrt(((2*l/s(i))^2)-(sind(CA(i))^2)));
+    V(i) = Vc + (Vd/2)*((2*l/s(i))+1-cosd(CA(i))...
+        -sqrt(((2*l/s(i))^2)-(sind(CA(i))^2)));
 end
 % k = 1.35; % isentropic coefficient (1.35)
 % C = P1*((Vd+Vc)^k); % isentropic constant for volumetric calculation
@@ -35,7 +34,9 @@ pm = 0.1; % piston mass (kg)
 IF = -pm*pa; % inertia force (N)
 Tq = IF.*sind(CA)*a; % torque (Nm)
 
-fm = 1.5e-2; % mass of fuel (0.02kg)
+% mass of fuel (0.02kg)
+fm = 5e-3;
+
 shru = 1.31; % specific heat ratio (unburned)
 shrb = 1.21; % specific heat ratio (burned)
 shrm = (shru+shrb)/2; % specific heat ratio (mean)
@@ -43,14 +44,15 @@ Te = 2394.5; % ignition temperature (K)
 
 % calculate heat income (molecular mass of methane = 16)
 % note that exhaust gas temperature is ignition temperature
-Pe = P1*(Te/T1); % Pressure of products
-eM = (-74850-(8.314*T1)); % enthalpy of react methane (kJ/kmol)
-eOr = 2*(-8.314*T1); % enthalpy of react oxygen (kJ/kmol)
-eOp = 2*(83174-8682-(8.314*Te)); % enthalpy of product oxygen (kJ/kmol)
-eNr = 7.52*(-8.314*T1); % enthalpy of react nitrogen (kJ/kmol)
-eNp = 7.52*(79320-8669-(8.314*Te)); % enthalpy of product nitrogen (kJ/kmol)
-eH = 2*(-241820+103508-9904-(8.314*Te)); % enthalpy of product vapor (kJ/kmol)
-eC = (-393520+125152-9364)-(8.314*Te); % enthalpy of product carbon dioxide (kJ/kmol)
+% enthalpy of products
+eM = (-74850-(8.314*T1)); % methane (kJ/kmol)
+eOr = 2*(-8.314*T1); % oxygen (kJ/kmol)
+eNr = 7.52*(-8.314*T1); % nitrogen (kJ/kmol)
+% enthalpy of reacts
+eOp = 2*(83174-8682-(8.314*Te)); % oxygen (kJ/kmol)
+eNp = 7.52*(79320-8669-(8.314*Te)); % nitrogen (kJ/kmol)
+eH = 2*(-241820+103508-9904-(8.314*Te)); % vapor (kJ/kmol)
+eC = (-393520+125152-9364)-(8.314*Te); % carbon dioxide (kJ/kmol)
 
 qin = (eM+eOr+eNr)-(eOp+eNp+eH+eC); % [kJ/kmol]
 Qin = (fm/16)*qin; % [kJ]
@@ -81,6 +83,8 @@ for i=1:length(CA)
         ((((2*l)/s(i))^2)-(sind(CA(i)))^2)^-0.5));
 end
 
+% diff of Pressure
+
 dP = zeros(1,length(CA));
 P = zeros(1,length(CA));
 P(1) = P1;
@@ -98,17 +102,12 @@ for i=1:length(CA)
 end
 
 % Temperature than concerns combustion
+% assuming that air-fuel mixture is ideal gas
 
 T = zeros(1,length(CA));
 
 for i=1:length(CA)
-%     if CA(i) < as % before combustion (zero index is 181)
-%         T(i) = T1*(V(1)/V(i)).^(shru-1); % assuming that this process is isentropic
-%     elseif CA(i) >= as && CA(i) <= as+40 % combustion
-%         T(i) = (P(i)*V(i))/(fm*0.287);
-%     else % after combustion
-        T(i) = (P(i)*V(i))/(fm*0.287);
-%     end
+    T(i) = (P(i)*V(i))/(fm*0.287);
 end
 
 % engine work
@@ -124,45 +123,46 @@ eE = W/Q; % engine efficiency
 
 %% plotting w/ print the efficiency
 
-% figure(1)
-% subplot(3,2,1)
-% plot(CA, T)
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Temperature (K)')
-% subplot(3,2,2)
-% plot(CA, P)
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Pressure (kPa)')
-% subplot(3,2,3)
-% plot(CA, pv)
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Piston Velocity (m/s)')
-% subplot(3,2,4)
-% plot(CA, pa)
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Piston Acceleration (m/s^2)')
-% subplot(3,2,5)
-% plot(CA, IF)
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Inertia Force (N)')
-% subplot(3,2,6)
-% plot(CA, Tq)
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Torque (N*m)')
+figure(1)
+subplot(3,2,1)
+plot(CA, T)
+xlabel('Crank Angle (¡Æ)')
+ylabel('Temperature (K)')
+subplot(3,2,2)
+plot(CA, P)
+xlabel('Crank Angle (¡Æ)')
+ylabel('Pressure (kPa)')
+subplot(3,2,3)
+plot(CA, pv)
+xlabel('Crank Angle (¡Æ)')
+ylabel('Piston Velocity (m/s)')
+subplot(3,2,4)
+plot(CA, pa)
+xlabel('Crank Angle (¡Æ)')
+ylabel('Piston Acceleration (m/s^2)')
+subplot(3,2,5)
+plot(CA, IF)
+xlabel('Crank Angle (¡Æ)')
+ylabel('Inertia Force (N)')
+subplot(3,2,6)
+plot(CA, Tq)
+xlabel('Crank Angle (¡Æ)')
+ylabel('Torque (N*m)')
 
 figure(2)
 
-% xlabel('Crank Angle (¡Æ)')
-% ylabel('Pressure (kPa)')
-% plot(CA, P)
-subplot(2,2,1)
-plot(CA, dQ)
-subplot(2,2,2)
-plot(CA, dP)
-subplot(2,2,3)
-plot(CA, T)
-subplot(2,2,4)
-plot(CA, P)
-% hold on
-% plot(CA, Tb)
-fprintf('engine efficiency : %4.3f\n',eE);
+xlabel('Crank Angle (¡Æ)')
+ylabel('Pressure (kPa)')
+plot(CA,P)
+hold on
+legend('¥ès = 0¡Æ','¥ès = -20¡Æ')
+
+figure(3)
+
+xlabel('Crank Angle (¡Æ)')
+ylabel('Temperature (K)')
+plot(CA,T)
+hold on
+legend('¥ès = 0¡Æ','¥ès = -20¡Æ')
+
+fprintf('engine efficiency (%d) : %4.3f\n',as,eE);
